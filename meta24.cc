@@ -76,6 +76,7 @@ template <typename L, typename I = mp11::mp_int<0>,
           typename J = mp11::mp_int<0>,
           typename N = mp11::mp_int<mp11::mp_size<L>::value>>
 struct Calc {
+  static_assert(mp11::mp_less<I, J>::value);
   using low = mp11::mp_min<I, J>;
   using high = mp11::mp_max<I, J>;
   using rest = mp11::mp_erase<mp11::mp_erase<L, high, mp_plus_c<high, 1>>, low,
@@ -98,8 +99,18 @@ struct Calc {
   using e4_list = mp11::mp_push_back<rest, e4>;
   using e4_type = typename Calc<e4_list>::type;
 
+  using e5 =
+      Expression<mp11::mp_at<L, J>, mp11::mp_at<L, I>, OpType::Substract>;
+  using e5_list = mp11::mp_push_back<rest, e5>;
+  using e5_type = typename Calc<e5_list>::type;
+
+  using e6 = Expression<mp11::mp_at<L, J>, mp11::mp_at<L, I>, OpType::Divide>;
+  using e6_list = mp11::mp_push_back<rest, e6>;
+  using e6_type = typename Calc<e6_list>::type;
+
   using next_type = typename Calc<L, I, mp_plus_c<J, 1>, N>::type;
-  using type = mp11::mp_append<e1_type, e2_type, e3_type, e4_type, next_type>;
+  using type = mp11::mp_append<e1_type, e2_type, e3_type, e4_type, e5_type,
+                               e6_type, next_type>;
 };
 
 template <typename L, typename I, typename N>
@@ -111,7 +122,7 @@ struct Calc<L, I, I, N> {
 
 template <typename L, typename I, typename N>
 struct Calc<L, I, N, N> {
-  using type = typename Calc<L, mp_plus_c<I, 1>, mp11::mp_int<0>, N>::type;
+  using type = typename Calc<L, mp_plus_c<I, 1>, mp_plus_c<I, 2>, N>::type;
 };
 
 template <typename L, typename N>
