@@ -1,4 +1,6 @@
 build -c opt
+# build --repo_env='CC=clang++'
+build --linkopt=-s
 build --cxxopt='-std=c++17'
 build --cxxopt='-O2'
 build --cxxopt='-static'

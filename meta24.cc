@@ -154,20 +154,11 @@ std::optional<std::string> calc24(const std::array<double, N>& a) {
 }
 
 int main() {
+  srand(time(NULL));
+
   constexpr int N = 4;
-  /*
-  // DEBUG
-  std::array<double, 4> a = {1.0, 2.0, 3.0, 4.0};
-  using all_calculations = Calc<ValueList<4>::type>::type;
-  calc24<all_calculations>(a);
-  return 0;
-  std::array<double, N> a = {2.0, 3.0, 4.0};
-  using all_calculations = Calc<ValueList<N>::type>::type;
-  calc24<all_calculations>(a);
-  */
   using all_calculations = Calc<ValueList<N>>::type;
 
-  srand(time(NULL));
   std::array<double, N> nums;
   for (int i = 0; i < 1000; i++) {
     std::string challenge;
