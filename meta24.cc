@@ -77,34 +77,33 @@ template <typename L, typename I = mp11::mp_int<0>,
           typename N = mp11::mp_int<mp11::mp_size<L>::value>>
 struct Calc {
   static_assert(mp11::mp_less<I, J>::value);
-  using low = mp11::mp_min<I, J>;
-  using high = mp11::mp_max<I, J>;
-  using rest = mp11::mp_erase<mp11::mp_erase<L, high, mp_plus_c<high, 1>>, low,
-                              mp_plus_c<low, 1>>;
+  using rest =
+      mp11::mp_erase<mp11::mp_erase<L, J, mp_plus_c<J, 1>>, I, mp_plus_c<I, 1>>;
 
-  using e1 = Expression<mp11::mp_at<L, I>, mp11::mp_at<L, J>, OpType::Add>;
+  using op1 = mp11::mp_at<L, I>;
+  using op2 = mp11::mp_at<L, J>;
+
+  using e1 = Expression<op1, op2, OpType::Add>;
   using e1_list = mp11::mp_push_back<rest, e1>;
   using e1_type = typename Calc<e1_list>::type;
 
-  using e2 =
-      Expression<mp11::mp_at<L, I>, mp11::mp_at<L, J>, OpType::Substract>;
+  using e2 = Expression<op1, op2, OpType::Substract>;
   using e2_list = mp11::mp_push_back<rest, e2>;
   using e2_type = typename Calc<e2_list>::type;
 
-  using e3 = Expression<mp11::mp_at<L, I>, mp11::mp_at<L, J>, OpType::Multiply>;
+  using e3 = Expression<op1, op2, OpType::Multiply>;
   using e3_list = mp11::mp_push_back<rest, e3>;
   using e3_type = typename Calc<e3_list>::type;
 
-  using e4 = Expression<mp11::mp_at<L, I>, mp11::mp_at<L, J>, OpType::Divide>;
+  using e4 = Expression<op1, op2, OpType::Divide>;
   using e4_list = mp11::mp_push_back<rest, e4>;
   using e4_type = typename Calc<e4_list>::type;
 
-  using e5 =
-      Expression<mp11::mp_at<L, J>, mp11::mp_at<L, I>, OpType::Substract>;
+  using e5 = Expression<op2, op1, OpType::Substract>;
   using e5_list = mp11::mp_push_back<rest, e5>;
   using e5_type = typename Calc<e5_list>::type;
 
-  using e6 = Expression<mp11::mp_at<L, J>, mp11::mp_at<L, I>, OpType::Divide>;
+  using e6 = Expression<op2, op1, OpType::Divide>;
   using e6_list = mp11::mp_push_back<rest, e6>;
   using e6_type = typename Calc<e6_list>::type;
 
@@ -127,11 +126,6 @@ struct Calc<L, I, N, N> {
 
 template <typename L, typename N>
 struct Calc<L, mp_plus_c<N, -1>, N, N> {
-  using type = mp11::mp_list<>;
-};
-
-template <typename L, typename I, typename J>
-struct Calc<L, I, J, mp11::mp_int<0>> {
   using type = mp11::mp_list<>;
 };
 
