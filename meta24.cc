@@ -1,11 +1,13 @@
+#include <array>
 #include <iostream>
 #include <optional>
-#include <tuple>
 #include <type_traits>
 
 #include "boost/mp11/algorithm.hpp"
+#include "boost/mp11/bind.hpp"
 #include "boost/mp11/function.hpp"
 #include "boost/mp11/list.hpp"
+#include "boost/mp11/utility.hpp"
 
 namespace mp11 = ::boost::mp11;
 
@@ -72,6 +74,16 @@ struct Expression {
   }
 };
 
+template <typename OP1, typename OP2>
+struct Combine {
+  using type = mp11::mp_list<Expression<OP1, OP2, OpType::Add>,
+                             Expression<OP1, OP2, OpType::Substract>,
+                             Expression<OP2, OP1, OpType::Substract>,
+                             Expression<OP1, OP2, OpType::Multiply>,
+                             Expression<OP1, OP2, OpType::Divide>,
+                             Expression<OP2, OP1, OpType::Divide>>;
+};
+
 template <typename L, typename I = mp11::mp_int<0>,
           typename J = mp11::mp_int<0>,
           typename N = mp11::mp_int<mp11::mp_size<L>::value>>
@@ -80,36 +92,16 @@ struct Calc {
   using rest =
       mp11::mp_erase<mp11::mp_erase<L, J, mp_plus_c<J, 1>>, I, mp_plus_c<I, 1>>;
 
-  using op1 = mp11::mp_at<L, I>;
-  using op2 = mp11::mp_at<L, J>;
-
-  using e1 = Expression<op1, op2, OpType::Add>;
-  using e1_list = mp11::mp_push_back<rest, e1>;
-  using e1_type = typename Calc<e1_list>::type;
-
-  using e2 = Expression<op1, op2, OpType::Substract>;
-  using e2_list = mp11::mp_push_back<rest, e2>;
-  using e2_type = typename Calc<e2_list>::type;
-
-  using e3 = Expression<op1, op2, OpType::Multiply>;
-  using e3_list = mp11::mp_push_back<rest, e3>;
-  using e3_type = typename Calc<e3_list>::type;
-
-  using e4 = Expression<op1, op2, OpType::Divide>;
-  using e4_list = mp11::mp_push_back<rest, e4>;
-  using e4_type = typename Calc<e4_list>::type;
-
-  using e5 = Expression<op2, op1, OpType::Substract>;
-  using e5_list = mp11::mp_push_back<rest, e5>;
-  using e5_type = typename Calc<e5_list>::type;
-
-  using e6 = Expression<op2, op1, OpType::Divide>;
-  using e6_list = mp11::mp_push_back<rest, e6>;
-  using e6_type = typename Calc<e6_list>::type;
+  using combined = typename Combine<mp11::mp_at<L, I>, mp11::mp_at<L, J>>::type;
+  using reduced_list = mp11::mp_apply<
+      mp11::mp_append,
+      mp11::mp_transform_q<
+          mp11::mp_quote_trait<Calc>,
+          mp11::mp_transform_q<mp11::mp_bind_front<mp11::mp_push_front, rest>,
+                               combined>>>;
 
   using next_type = typename Calc<L, I, mp_plus_c<J, 1>, N>::type;
-  using type = mp11::mp_append<e1_type, e2_type, e3_type, e4_type, e5_type,
-                               e6_type, next_type>;
+  using type = mp11::mp_append<reduced_list, next_type>;
 };
 
 template <typename L, typename I, typename N>
@@ -132,16 +124,15 @@ struct Calc<L, mp_plus_c<N, -1>, N, N> {
 template <int N>
 using ValueList = mp11::mp_transform<Value, mp11::mp_iota<mp11::mp_int<N>>>;
 
-template <typename L, std::size_t N,
-          std::size_t I = mp11::mp_size<L>::value - 1>
+template <typename L, std::size_t N, std::size_t I = 0>
 std::optional<std::string> calc24(const std::array<double, N>& a) {
   using E = mp11::mp_at_c<L, I>;
   if (E::eval(a) == 24) {
     // std::cout << typeid(std::declval<E>()).name() << std::endl;
     return E::print(a);
   }
-  if constexpr (I > 0) {
-    return calc24<L, N, I - 1>(a);
+  if constexpr (I + 1 < mp11::mp_size<L>::value) {
+    return calc24<L, N, I + 1>(a);
   } else {
     return {};
   }
