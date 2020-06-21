@@ -12,7 +12,7 @@
 namespace mp11 = ::boost::mp11;
 
 template <typename T, int N>
-using mp_plus_c = mp11::mp_plus<T, mp11::mp_int<N>>;
+using mp_plus_c = mp11::mp_size_t<T::value + N>;
 
 enum class OpType { Add, Substract, Multiply, Divide };
 
@@ -84,14 +84,13 @@ struct Combine {
                              Expression<OP2, OP1, OpType::Divide>>;
 };
 
-template <typename L, typename I = mp11::mp_int<0>,
-          typename J = mp11::mp_int<0>,
-          typename N = mp11::mp_int<mp11::mp_size<L>::value>>
+template <typename L, typename I = mp11::mp_size_t<0>,
+          typename J = mp11::mp_size_t<0>, typename N = mp11::mp_size<L>>
 struct Calc {
   static_assert(mp11::mp_less<I, J>::value);
+
   using rest =
       mp11::mp_erase<mp11::mp_erase<L, J, mp_plus_c<J, 1>>, I, mp_plus_c<I, 1>>;
-
   using combined = typename Combine<mp11::mp_at<L, I>, mp11::mp_at<L, J>>::type;
   using reduced_list = mp11::mp_apply<
       mp11::mp_append,
@@ -100,10 +99,12 @@ struct Calc {
           mp11::mp_transform_q<mp11::mp_bind_front<mp11::mp_push_front, rest>,
                                combined>>>;
 
-  using next_type = typename Calc<L, I, mp_plus_c<J, 1>, N>::type;
-  using type = mp11::mp_append<reduced_list, next_type>;
+  using next_list = typename Calc<L, I, mp_plus_c<J, 1>, N>::type;
+
+  using type = mp11::mp_append<reduced_list, next_list>;
 };
 
+// Skip if I == J.
 template <typename L, typename I, typename N>
 struct Calc<L, I, I, N> {
   using type =
@@ -111,18 +112,20 @@ struct Calc<L, I, I, N> {
                                   I, mp_plus_c<I, 1>, N>::type;
 };
 
+// Move to next I.
 template <typename L, typename I, typename N>
 struct Calc<L, I, N, N> {
   using type = typename Calc<L, mp_plus_c<I, 1>, mp_plus_c<I, 2>, N>::type;
 };
 
+// Terminal state.
 template <typename L, typename N>
 struct Calc<L, mp_plus_c<N, -1>, N, N> {
   using type = mp11::mp_list<>;
 };
 
 template <int N>
-using ValueList = mp11::mp_transform<Value, mp11::mp_iota<mp11::mp_int<N>>>;
+using ValueList = mp11::mp_transform<Value, mp11::mp_iota_c<N>>;
 
 template <typename L, std::size_t N, std::size_t I = 0>
 std::optional<std::string> calc24(const std::array<double, N>& a) {
