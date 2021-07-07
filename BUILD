@@ -1,5 +1,9 @@
-
 load("@rules_cc//cc:defs.bzl", "cc_test")
+
+cc_library(
+  name = "common",
+  hdrs = ["common.h"],
+)
 
 cc_library(
   name = "mp11",
@@ -11,7 +15,8 @@ cc_library(
   name = "meta24_lib",
   hdrs = ["meta24.h"],
   deps = [
-    "//:mp11"
+    "//:mp11",
+    ":common",
   ],
 )
 
@@ -25,7 +30,5 @@ cc_test(
 cc_binary(
   name = "meta24",
   srcs = ["meta24.cc"],
-  deps = [
-    ":meta24_lib",
-  ],
+  deps = [":meta24_lib"],
 )
