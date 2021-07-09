@@ -7,5 +7,5 @@ Notes
 - Challenge to build for more than 4 numbers
 
 Tested under Linux with
-- (Recommended) clang++ 10.0
-- g++ 9.3
+- clang++ 10.0/12.0
+- g++ 9.3/11.1 (avoid g++, very slow compilation on deep templates)
