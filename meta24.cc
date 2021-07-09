@@ -4,12 +4,10 @@
 #include <iostream>
 #include <optional>
 
-constexpr int N = 4;
-using all_calculations = Calc<ValueList<N>>::type;
-
 int main() {
   srand(123);
 
+  constexpr int N = 4;
   std::array<double, N> nums;
   for (int i = 0; i < 1000; i++) {
     std::string challenge;
@@ -20,7 +18,7 @@ int main() {
       challenge.append(std::to_string(x));
     }
     challenge.append(" -> ");
-    const auto result = calc24<all_calculations>(nums);
+    const auto result = calc24(nums);
     if (result.has_value()) {
       challenge.append(result.value());
     } else {

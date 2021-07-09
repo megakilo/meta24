@@ -65,19 +65,22 @@ struct Calc<L, I, I> {
                                            mp_plus_c<I, 1>>::type;
 };
 
-template <int N>
-using ValueList = mp11::mp_transform<Value, mp11::mp_iota_c<N>>;
-
 template <typename L, std::size_t N, std::size_t I = 0>
-std::optional<std::string> calc24(const std::array<double, N>& a) {
+std::optional<std::string> calc24_impl(const std::array<double, N>& a) {
   using E = mp11::mp_at_c<L, I>;
   if (E::eval(a) == 24) {
     // std::cout << typeid(std::declval<E>()).name() << std::endl;
     return E::print(a);
   }
   if constexpr (I + 1 < mp11::mp_size<L>::value) {
-    return calc24<L, N, I + 1>(a);
+    return calc24_impl<L, N, I + 1>(a);
   } else {
     return {};
   }
+}
+
+template <std::size_t N>
+std::optional<std::string> calc24(const std::array<double, N>& a) {
+  using ValueList = mp11::mp_transform<Value, mp11::mp_iota_c<N>>;
+  return calc24_impl<typename Calc<ValueList>::type>(a);
 }

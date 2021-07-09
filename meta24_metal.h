@@ -54,19 +54,22 @@ struct Build<L, I, I> {
                         typename Build<L, I, mtl::inc<I>>::type>;
 };
 
-template <int N>
-using IndexList = mtl::transform<mtl::lambda<Value>,
-                                 mtl::iota<mtl::number<0>, mtl::number<N>>>;
-
 template <typename L, std::size_t N, typename I = mtl::number<0>>
-std::optional<std::string> calc24(const std::array<double, N> &a) {
+std::optional<std::string> calc24_impl(const std::array<double, N> &a) {
   using E = mtl::at<L, I>;
   if (E::eval(a) == 24) {
     return E::print(a);
   }
   if constexpr (mtl::less<mtl::inc<I>, mtl::size<L>>::value) {
-    return calc24<L, N, mtl::inc<I>>(a);
+    return calc24_impl<L, N, mtl::inc<I>>(a);
   } else {
     return {};
   }
+}
+
+template <std::size_t N>
+std::optional<std::string> calc24(const std::array<double, N> &a) {
+  using IndexList = mtl::transform<mtl::lambda<Value>,
+                                   mtl::iota<mtl::number<0>, mtl::number<N>>>;
+  return calc24_impl<typename Build<IndexList>::type>(a);
 }
