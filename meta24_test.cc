@@ -8,6 +8,12 @@ TEST(Calc24Test, Basic3Numbers) {
   EXPECT_TRUE(result.has_value());
 }
 
+TEST(Calc24Test, Basic4Numbers) {
+  constexpr int N = 4;
+  const auto result = calc24<Calc<ValueList<N>>::type>(std::array<double, N> {1, 2, 3, 4});
+  EXPECT_TRUE(result.has_value());
+}
+
 TEST(Calc24Test, Invalid3Numbers) {
   constexpr int N = 3;
   const auto result = calc24<Calc<ValueList<N>>::type>(std::array<double, N> {1, 3, 4});
