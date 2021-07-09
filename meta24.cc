@@ -4,11 +4,11 @@
 #include <iostream>
 #include <optional>
 
-constexpr int N = 3;
+constexpr int N = 4;
 using all_calculations = Calc<ValueList<N>>::type;
 
 int main() {
-  srand(time(NULL));
+  srand(123);
 
   std::array<double, N> nums;
   for (int i = 0; i < 1000; i++) {
