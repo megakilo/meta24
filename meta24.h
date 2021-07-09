@@ -3,12 +3,12 @@
 #include <optional>
 #include <type_traits>
 
-#include "common.h"
 #include "boost/mp11/algorithm.hpp"
 #include "boost/mp11/bind.hpp"
 #include "boost/mp11/function.hpp"
 #include "boost/mp11/list.hpp"
 #include "boost/mp11/utility.hpp"
+#include "common.h"
 
 namespace mp11 = ::boost::mp11;
 
@@ -26,7 +26,7 @@ struct Combine {
 };
 
 template <typename L, typename I = mp11::mp_size_t<0>,
-          typename J = mp11::mp_size_t<0>, typename N = mp11::mp_size<L>>
+          typename J = mp11::mp_size_t<0>>
 struct Calc {
   static_assert(mp11::mp_less<I, J>::value);
 
@@ -40,29 +40,29 @@ struct Calc {
           mp11::mp_transform_q<mp11::mp_bind_front<mp11::mp_push_front, rest>,
                                combined>>>;
 
-  using next_list = typename Calc<L, I, mp_plus_c<J, 1>, N>::type;
+  using next_list = typename Calc<L, I, mp_plus_c<J, 1>>::type;
 
   using type = mp11::mp_append<reduced_list, next_list>;
 };
 
-// Skip if I == J.
-template <typename L, typename I, typename N>
-struct Calc<L, I, I, N> {
-  using type =
-      typename mp11::mp_eval_if_c<N::value == 1, mp11::mp_identity<L>, Calc, L,
-                                  I, mp_plus_c<I, 1>, N>::type;
+// Terminal state.
+template <typename L>
+struct Calc<L, mp_plus_c<mp11::mp_size<L>, -1>, mp11::mp_size<L>> {
+  using type = mp11::mp_list<>;
 };
 
 // Move to next I.
-template <typename L, typename I, typename N>
-struct Calc<L, I, N, N> {
-  using type = typename Calc<L, mp_plus_c<I, 1>, mp_plus_c<I, 2>, N>::type;
+template <typename L, typename I>
+struct Calc<L, I, mp11::mp_size<L>> {
+  using type = typename Calc<L, mp_plus_c<I, 1>, mp_plus_c<I, 2>>::type;
 };
 
-// Terminal state.
-template <typename L, typename N>
-struct Calc<L, mp_plus_c<N, -1>, N, N> {
-  using type = mp11::mp_list<>;
+// Skip if I == J.
+template <typename L, typename I>
+struct Calc<L, I, I> {
+  using type = typename mp11::mp_eval_if_c<mp11::mp_size<L>::value == 1,
+                                           mp11::mp_identity<L>, Calc, L, I,
+                                           mp_plus_c<I, 1>>::type;
 };
 
 template <int N>
