@@ -32,3 +32,36 @@ cc_binary(
   srcs = ["meta24.cc"],
   deps = [":meta24_lib"],
 )
+
+cc_library(
+  name = "metal_lib",
+  hdrs = glob(["metal/include/**/*.hpp"]),
+  includes = ["metal/include/"],
+)
+
+cc_library(
+  name = "meta24_metal_lib",
+  hdrs = ["meta24_metal.h"],
+  deps = [
+    "common",
+    ":metal_lib",
+  ],
+)
+
+cc_test(
+  name = "meta24_metal_test",
+  size = "small",
+  srcs = ["meta24_metal_test.cc"],
+  deps = [
+    "@googletest//:gtest_main",
+    ":meta24_metal_lib"
+  ],
+)
+
+cc_binary(
+  name = "meta24_metal",
+  srcs = ["meta24_metal.cc"],
+  deps = [
+    ":meta24_metal_lib",
+  ],
+)
