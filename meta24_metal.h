@@ -8,8 +8,7 @@
 
 namespace mtl = metal;
 
-template <typename OP1, typename OP2>
-struct Combine {
+template <typename OP1, typename OP2> struct Combine {
   using type = mtl::list<Expression<OP1, OP2, OpType::Add>,
                          Expression<OP1, OP2, OpType::Substract>,
                          Expression<OP2, OP1, OpType::Substract>,
@@ -23,35 +22,31 @@ struct Build {
   static_assert(mtl::less<I, J>::value);
 
   using rest = mtl::erase<mtl::erase<L, J, mtl::inc<J>>, I, mtl::inc<I>>;
-  using combined = typename Combine<mtl::at<L, I>, mtl::at<L, J>>::type;
+  using combined = mtl::eval<Combine<mtl::at<L, I>, mtl::at<L, J>>>;
   using append_lambda =
       mtl::bind<mtl::lambda<mtl::append>, mtl::always<rest>, mtl::_1>;
   using reduced_result =
       mtl::flatten<mtl::transform<mtl::lazy<Build>,
                                   mtl::transform<append_lambda, combined>>>;
-  using next_result = typename Build<L, I, mtl::inc<J>>::type;
+  using next_result = mtl::eval<Build<L, I, mtl::inc<J>>>;
   using type = mtl::join<reduced_result, next_result>;
 };
 
-template <typename L>
-struct Build<L, mtl::dec<mtl::size<L>>, mtl::size<L>> {
+template <typename L> struct Build<L, mtl::dec<mtl::size<L>>, mtl::size<L>> {
   using type = mtl::list<>;
 };
 
-template <typename L, typename I>
-struct Build<L, I, mtl::size<L>> {
+template <typename L, typename I> struct Build<L, I, mtl::size<L>> {
   using N = mtl::size<L>;
   static_assert(mtl::less<I, N>::value);
-  using type =
-      typename Build<L, mtl::inc<I>, mtl::add<I, mtl::number<2>>>::type;
+  using type = mtl::eval<Build<L, mtl::inc<I>, mtl::add<I, mtl::number<2>>>>;
 };
 
-template <typename L, typename I>
-struct Build<L, I, I> {
+template <typename L, typename I> struct Build<L, I, I> {
   using N = mtl::size<L>;
   static_assert(mtl::less<I, N>::value);
   using type = mtl::if_<mtl::number<N::value == 1>, L,
-                        typename Build<L, I, mtl::inc<I>>::type>;
+                        mtl::eval<Build<L, I, mtl::inc<I>>>>;
 };
 
 template <typename L, std::size_t N, typename I = mtl::number<0>>
@@ -71,5 +66,5 @@ template <std::size_t N>
 std::optional<std::string> calc24(const std::array<double, N> &a) {
   using IndexList = mtl::transform<mtl::lambda<Value>,
                                    mtl::iota<mtl::number<0>, mtl::number<N>>>;
-  return calc24_impl<typename Build<IndexList>::type>(a);
+  return calc24_impl<mtl::eval<Build<IndexList>>>(a);
 }
