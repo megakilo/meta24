@@ -12,11 +12,7 @@
 
 namespace mp11 = ::boost::mp11;
 
-template <typename T, int N>
-using mp_plus_c = mp11::mp_size_t<T::value + N>;
-
-template <typename OP1, typename OP2>
-struct Combine {
+template <typename OP1, typename OP2> struct Combine {
   using type = mp11::mp_list<Expression<OP1, OP2, OpType::Add>,
                              Expression<OP1, OP2, OpType::Substract>,
                              Expression<OP2, OP1, OpType::Substract>,
@@ -25,51 +21,40 @@ struct Combine {
                              Expression<OP2, OP1, OpType::Divide>>;
 };
 
-template <typename L, typename I = mp11::mp_size_t<0>,
-          typename J = mp11::mp_size_t<0>>
-struct Calc {
+template <typename L> struct Build;
+
+template <typename L, typename IndexPair> struct Reduce {
+  using I = mp11::mp_at_c<IndexPair, 0>;
+  using J = mp11::mp_at_c<IndexPair, 1>;
   static_assert(mp11::mp_less<I, J>::value);
 
-  using rest =
-      mp11::mp_erase<mp11::mp_erase<L, J, mp_plus_c<J, 1>>, I, mp_plus_c<I, 1>>;
+  template <typename T> using mp_inc = mp11::mp_size_t<T::value + 1>;
+  using rest = mp11::mp_erase<mp11::mp_erase<L, J, mp_inc<J>>, I, mp_inc<I>>;
   using combined = typename Combine<mp11::mp_at<L, I>, mp11::mp_at<L, J>>::type;
-  using reduced_list = mp11::mp_apply<
-      mp11::mp_append,
-      mp11::mp_transform_q<
-          mp11::mp_quote_trait<Calc>,
-          mp11::mp_transform_q<mp11::mp_bind_front<mp11::mp_push_front, rest>,
-                               combined>>>;
-
-  using next_list = typename Calc<L, I, mp_plus_c<J, 1>>::type;
-
-  using type = mp11::mp_append<reduced_list, next_list>;
+  using type = mp11::mp_flatten<mp11::mp_transform_q<
+      mp11::mp_quote_trait<Build>,
+      mp11::mp_transform_q<mp11::mp_bind_front<mp11::mp_push_front, rest>,
+                           combined>>>;
 };
 
-// Terminal state.
-template <typename L>
-struct Calc<L, mp_plus_c<mp11::mp_size<L>, -1>, mp11::mp_size<L>> {
-  using type = mp11::mp_list<>;
-};
+template <typename L> struct Build {
+  template <typename IndexPair>
+  using dedup = mp11::mp_not<
+      mp11::mp_less<mp11::mp_at_c<IndexPair, 0>, mp11::mp_at_c<IndexPair, 1>>>;
 
-// Move to next I.
-template <typename L, typename I>
-struct Calc<L, I, mp11::mp_size<L>> {
-  using type = typename Calc<L, mp_plus_c<I, 1>, mp_plus_c<I, 2>>::type;
-};
-
-// Skip if I == J.
-template <typename L, typename I>
-struct Calc<L, I, I> {
-  using type = typename mp11::mp_eval_if_c<mp11::mp_size<L>::value == 1,
-                                           mp11::mp_identity<L>, Calc, L, I,
-                                           mp_plus_c<I, 1>>::type;
+  using indexes = mp11::mp_iota<mp11::mp_size<L>>;
+  using index_pairs =
+      mp11::mp_remove_if<mp11::mp_product<mp11::mp_list, indexes, indexes>,
+                         dedup>;
+  using result = mp11::mp_flatten<mp11::mp_transform_q<
+      mp11::mp_bind_front_q<mp11::mp_quote_trait<Reduce>, L>, index_pairs>>;
+  using type = mp11::mp_if_c < mp11::mp_size<L>::value<2, L, result>;
 };
 
 template <typename L, std::size_t N, std::size_t I = 0>
-std::optional<std::string> calc24_impl(const std::array<double, N>& a) {
+std::optional<std::string> calc24_impl(const std::array<double, N> &a) {
   using E = mp11::mp_at_c<L, I>;
   if (E::eval(a) == 24) {
-    // std::cout << typeid(std::declval<E>()).name() << std::endl;
     return E::print(a);
   }
   if constexpr (I + 1 < mp11::mp_size<L>::value) {
@@ -80,7 +65,7 @@ std::optional<std::string> calc24_impl(const std::array<double, N>& a) {
 }
 
 template <std::size_t N>
-std::optional<std::string> calc24(const std::array<double, N>& a) {
-  using ValueList = mp11::mp_transform<Value, mp11::mp_iota_c<N>>;
-  return calc24_impl<typename Calc<ValueList>::type>(a);
+std::optional<std::string> calc24(const std::array<double, N> &a) {
+  using Values = mp11::mp_transform<Value, mp11::mp_iota_c<N>>;
+  return calc24_impl<typename Build<Values>::type>(a);
 }

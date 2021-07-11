@@ -17,36 +17,33 @@ template <typename OP1, typename OP2> struct Combine {
                          Expression<OP2, OP1, OpType::Divide>>;
 };
 
-template <typename L, typename I = mtl::number<0>, typename J = mtl::number<0>>
-struct Build {
+template <typename L> struct Build;
+
+template <typename L, typename IndexPair> struct Reduce {
+  using I = mtl::at<IndexPair, mtl::number<0>>;
+  using J = mtl::at<IndexPair, mtl::number<1>>;
   static_assert(mtl::less<I, J>::value);
 
   using rest = mtl::erase<mtl::erase<L, J, mtl::inc<J>>, I, mtl::inc<I>>;
   using combined = mtl::eval<Combine<mtl::at<L, I>, mtl::at<L, J>>>;
   using append_lambda =
       mtl::bind<mtl::lambda<mtl::append>, mtl::always<rest>, mtl::_1>;
-  using reduced_result =
+  using type =
       mtl::flatten<mtl::transform<mtl::lazy<Build>,
                                   mtl::transform<append_lambda, combined>>>;
-  using next_result = mtl::eval<Build<L, I, mtl::inc<J>>>;
-  using type = mtl::join<reduced_result, next_result>;
 };
 
-template <typename L> struct Build<L, mtl::dec<mtl::size<L>>, mtl::size<L>> {
-  using type = mtl::list<>;
-};
+template <typename L> struct Build {
+  template <typename IndexPair>
+  using dedup = mtl::not_<mtl::less<mtl::at<IndexPair, mtl::number<0>>,
+                                    mtl::at<IndexPair, mtl::number<1>>>>;
 
-template <typename L, typename I> struct Build<L, I, mtl::size<L>> {
-  using N = mtl::size<L>;
-  static_assert(mtl::less<I, N>::value);
-  using type = mtl::eval<Build<L, mtl::inc<I>, mtl::add<I, mtl::number<2>>>>;
-};
-
-template <typename L, typename I> struct Build<L, I, I> {
-  using N = mtl::size<L>;
-  static_assert(mtl::less<I, N>::value);
-  using type = mtl::if_<mtl::number<N::value == 1>, L,
-                        mtl::eval<Build<L, I, mtl::inc<I>>>>;
+  using indexes = mtl::iota<mtl::number<0>, mtl::size<L>>;
+  using index_pairs =
+      mtl::remove_if<mtl::combine<indexes, mtl::number<2>>, mtl::lambda<dedup>>;
+  using result = mtl::flatten<
+      mtl::transform<mtl::partial<mtl::lazy<Reduce>, L>, index_pairs>>;
+  using type = mtl::if_<mtl::less<mtl::size<L>, mtl::number<2>>, L, result>;
 };
 
 template <typename L, std::size_t N, typename I = mtl::number<0>>
@@ -64,7 +61,7 @@ std::optional<std::string> calc24_impl(const std::array<double, N> &a) {
 
 template <std::size_t N>
 std::optional<std::string> calc24(const std::array<double, N> &a) {
-  using IndexList = mtl::transform<mtl::lambda<Value>,
-                                   mtl::iota<mtl::number<0>, mtl::number<N>>>;
-  return calc24_impl<mtl::eval<Build<IndexList>>>(a);
+  using Values = mtl::transform<mtl::lambda<Value>,
+                                mtl::iota<mtl::number<0>, mtl::number<N>>>;
+  return calc24_impl<mtl::eval<Build<Values>>>(a);
 }
