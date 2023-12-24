@@ -13,7 +13,7 @@ int main() {
 
   constexpr int N = 4;
   std::array<double, N> nums;
-  for (int i = 0; i < 1000; i++) {
+  for (int i = 0; i < 100000; i++) {
     std::string challenge;
     for (int j = 0; j < N; j++) {
       int x = rand() % 13 + 1;
