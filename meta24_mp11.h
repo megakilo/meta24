@@ -48,7 +48,7 @@ template <typename L> struct Build {
                          dedup>;
   using result = mp11::mp_flatten<mp11::mp_transform_q<
       mp11::mp_bind_front_q<mp11::mp_quote_trait<Reduce>, L>, index_pairs>>;
-  using type = mp11::mp_if_c < mp11::mp_size<L>::value<2, L, result>;
+  using type = mp11::mp_if_c<(mp11::mp_size<L>::value < 2), L, result>;
 };
 
 template <typename L, std::size_t N, std::size_t I = 0>
