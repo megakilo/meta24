@@ -15,7 +15,7 @@
         in
         {
           devShells.default =
-            pkgs.mkShell {
+            pkgs.mkShell rec {
               packages = [
                 pkgs.bazel
                 pkgs.clang
@@ -24,10 +24,9 @@
                 pkgs.zig
               ];
 
+              description = (import "${self}/flake.nix").description;
               shellHook = ''
-                export PS1='[\[\033[1;32m\]meta24\[\033[0m\]:\[\033[1;34m\]\w\[\033[0m\]]\$ '
-                # Sync meta libs
-                git submodule update --init --recursive
+                export PS1='[\[\033[1;32m\]${description}\[\033[0m\]:\[\033[1;34m\]\w\[\033[0m\]]\$ '
               '';
             };
         }
