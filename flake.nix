@@ -17,10 +17,11 @@
           devShells.default =
             pkgs.mkShell {
               packages = [
-                pkgs.clang
                 pkgs.bazel
-                pkgs.llvm
+                pkgs.clang
                 pkgs.git
+                pkgs.gnumake
+                pkgs.zig
               ];
 
               shellHook = ''
