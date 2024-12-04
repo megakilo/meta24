@@ -36,7 +36,6 @@ cc_binary(
     srcs = ["meta24.cc"],
     defines = ["MP11"],
     deps = [":meta24_mp11_lib"],
-    linkstatic = 0,
 )
 
 cc_library(
@@ -72,5 +71,4 @@ cc_binary(
     deps = [
         ":meta24_metal_lib",
     ],
-    linkstatic = 0,
 )

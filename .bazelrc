@@ -1,5 +1,6 @@
 build -c opt
 build --repo_env='CC=clang++'
 build --cxxopt='-std=c++17'
+build --cxxopt='-s'
 build --cxxopt='-O2'
 build --cxxopt='-ftemplate-depth=4000'
