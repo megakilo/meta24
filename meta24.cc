@@ -1,8 +1,4 @@
-#ifdef MP11
-#include "meta24_mp11.h"
-#elif METAL
-#include "meta24_metal.h"
-#endif
+#include "meta24.h"
 
 #include <array>
 #include <iostream>
