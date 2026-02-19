@@ -51,21 +51,17 @@ template <typename L> struct Build {
   using type = mp11::mp_if_c<(mp11::mp_size<L>::value < 2), L, result>;
 };
 
-template <typename L, std::size_t N, std::size_t I = 0>
-std::optional<std::string> calc24_impl(const std::array<double, N> &a) {
-  using E = mp11::mp_at_c<L, I>;
-  if (E::eval(a) == 24) {
-    return E::print(a);
-  }
-  if constexpr (I + 1 < mp11::mp_size<L>::value) {
-    return calc24_impl<L, N, I + 1>(a);
-  } else {
-    return {};
-  }
-}
-
 template <std::size_t N>
 std::optional<std::string> calc24(const std::array<double, N> &a) {
   using Values = mp11::mp_transform<Value, mp11::mp_iota_c<N>>;
-  return calc24_impl<typename Build<Values>::type>(a);
+  using Exprs = typename Build<Values>::type;
+  std::optional<std::string> result;
+  mp11::mp_for_each<Exprs>([&](auto expr_tag) {
+    if (result.has_value()) return;
+    using E = decltype(expr_tag);
+    if (E::eval(a) == 24) {
+      result = E::print(a);
+    }
+  });
+  return result;
 }
