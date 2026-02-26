@@ -27,3 +27,57 @@ cc_binary(
     srcs = ["meta24.cc"],
     deps = [":meta24_lib"],
 )
+
+cc_library(
+    name = "meta24_constexpr_lib",
+    hdrs = ["meta24_constexpr.h"],
+    copts = ["-std=c++20"],
+)
+
+cc_test(
+    name = "meta24_constexpr_test",
+    size = "small",
+    srcs = ["meta24_constexpr_test.cc"],
+    copts = ["-std=c++20"],
+    deps = [
+        ":meta24_constexpr_lib",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_binary(
+    name = "meta24_constexpr",
+    srcs = ["meta24_constexpr.cc"],
+    copts = ["-std=c++20"],
+    deps = [":meta24_constexpr_lib"],
+)
+
+cc_library(
+    name = "hana",
+    hdrs = glob(["hana/include/**/*.hpp"]),
+    includes = ["hana/include/"],
+)
+
+cc_library(
+    name = "meta24_hana_lib",
+    hdrs = ["meta24_hana.h"],
+    deps = [
+        "//:hana",
+    ],
+)
+
+cc_test(
+    name = "meta24_hana_test",
+    size = "small",
+    srcs = ["meta24_hana_test.cc"],
+    deps = [
+        ":meta24_hana_lib",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_binary(
+    name = "meta24_hana",
+    srcs = ["meta24_hana.cc"],
+    deps = [":meta24_hana_lib"],
+)
